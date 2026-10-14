@@ -2,13 +2,8 @@ name: Build and Publish NPM package on release
 
 on:
   release:
-    types: [published]
+    types: [ published ]
   workflow_dispatch:
-    inputs:
-      skip-tests:
-        description: 'Skip running tests'
-        required: false
-        default: 'false'
 
 permissions:
   contents: write
@@ -21,76 +16,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
-          # Use the ref that triggered the workflow (release tag), fallback to default branch if not set
-          ref: ${{ github.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
 
-      - name: Authenticate to npm
-        # Ensure npm can publish using the provided token
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install dependencies (detect package manager)
-        run: |
-          set -e
-          if [ -f pnpm-lock.yaml ]; then
-            corepack enable
-            corepack prepare pnpm@latest --activate
-            pnpm install --frozen-lockfile
-          elif [ -f yarn.lock ]; then
-            corepack enable
-            yarn install --frozen-lockfile
-          elif [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-
-      - name: Run tests
-        if: ${{ github.event.inputs.skip-tests != 'true' }}
-        run: |
-          set -e
-          # Only run tests if a "test" script exists
-          if npm run | grep -q ' test'; then
-            if [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
-              yarn test --silent
-            else
-              npm test --silent
-            fi
-          else
-            echo "No test script defined — skipping tests."
-          fi
-
-      - name: Build
-        run: |
-          set -e
-          # Only run build if a "build" script exists
-          if npm run | grep -q ' build'; then
-            if [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
-              yarn build
-            else
-              npm run build
-            fi
-          else
-            echo "No build script defined — skipping build."
-          fi
+      - name: Build (if present)
+        run: npm run build --if-present
 
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          set -e
-          # Ensure registry auth is set
-          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
-          if [ -f package.json ]; then
-            # If your package is public and scoped, keep --access public; remove if private
-            npm publish --access public
-          else
-            echo "No package.json found — nothing to publish."
-          fi
+          npm publish --access public
