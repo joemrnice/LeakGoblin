@@ -1,0 +1,30 @@
+{
+  "$schema": "https://example.com/leakgoblin-schema-not-yet-published",
+  "version": 1,
+  "exclude": [
+    ".git",
+    "node_modules",
+    "dist",
+    "build",
+    ".next",
+    "coverage"
+  ],
+  "severityThreshold": "low",
+  "confidenceThreshold": "low",
+  "maxFileSizeMB": 5,
+  "customPatterns": [
+    {
+      "id": "internal_token",
+      "pattern": "INTERNAL_[A-Z0-9_]{16,}",
+      "description": "Internal company token format example",
+      "category": "api_key",
+      "severity": "high",
+      "confidence": "medium"
+    }
+  ],
+  "allowlist": {
+    "files": [],
+    "patterns": ["^AKIAIOSFODNN7EXAMPLE$"],
+    "secrets": []
+  }
+}

@@ -1,0 +1,975 @@
+# Open-Source Launch Sprint: Four AI Coding-Agent Build Prompts
+
+## Universal instructions for the coding agent
+
+These instructions establish the delivery standard for all four projects below.
+
+Build the selected project as a working, maintainable, production-conscious open-source application. Do not stop after creating a design, a prototype, a project plan, empty components, mock API endpoints, or placeholder functions.
+
+Before coding, inspect the current workspace and identify existing files, installed runtimes, package managers, conventions, and constraints. Preserve existing user work. If the workspace is empty, initialize the project using appropriate, actively maintained technologies.
+
+Verify current stable package versions and official APIs before selecting dependencies. Prefer mature, maintained libraries over unnecessary custom implementations. Do not upgrade dependencies blindly or introduce packages just for convenience.
+
+Work incrementally. Implement the smallest complete vertical slice first, then improve it. Run the actual tests, production build, linters, and relevant smoke tests. Fix discovered problems before declaring completion. Never claim a test or deployment succeeded without evidence.
+
+Keep the initial scope compatible with a two-week public launch. Put optional features behind clear extension points rather than delaying the MVP.
+
+Every project must include:
+
+- A complete README with a concise introduction, screenshots or GIF placeholders, installation, quick start, usage examples, configuration, troubleshooting, and contribution instructions.
+- An appropriate open-source license, preserving any existing license unless explicitly authorized to change it.
+- A security policy, contribution guide, issue templates, and a pull-request template.
+- Automated tests and a GitHub Actions workflow for supported environments.
+- A sample environment configuration file containing names and descriptions, never real credentials.
+- Clear error messages, accessible interfaces where applicable, and sensible empty, loading, success, and failure states.
+- A support-for-development section with honest disclosures about what sponsorship funds will support.
+- A release checklist and a launch kit containing factual announcements for suitable developer communities.
+
+Do not invent sponsorship accounts, donation links, community endorsements, benchmarks, user counts, security certifications, or testimonials. Use clearly labeled configuration placeholders until the maintainer provides genuine details.
+
+Do not add invasive analytics, hidden telemetry, undisclosed external API calls, artificial urgency, or misleading donation prompts.
+
+# PROMPT 1 — LeakGoblin
+
+## Build a funny, genuinely useful open-source AI-prompt security CLI
+
+### Role
+
+Act as a senior developer-tools engineer, TypeScript architect, application security specialist, open-source maintainer, and developer-experience designer.
+
+Build **LeakGoblin**, a cross-platform command-line tool that scans and sanitizes text before developers paste it into AI assistants, coding agents, chatbots, issue trackers, or other external services.
+
+The product personality should resemble an overconfident medieval goblin guard protecting a developer's secrets. Its actual security behavior must remain serious, predictable, and conservative.
+
+### 1. Product objective
+
+Developers routinely copy logs, stack traces, configuration snippets, source code, and terminal output into AI tools. Those snippets may accidentally contain API keys, access tokens, passwords, private-key material, database credentials, or other sensitive information.
+
+LeakGoblin should make this workflow safer without requiring an account, subscription, cloud service, or complex configuration.
+
+The core promise is:
+
+"Scan locally. Redact sensitive-looking values. Review the result before sharing."
+
+Never claim that a scan can identify every possible secret.
+
+### 2. Technology and project architecture
+
+Use:
+
+- Node.js with TypeScript and ESM.
+- A lightweight CLI framework, with dependencies selected after checking current maintenance and compatibility.
+- A terminal-formatting library that supports Windows, macOS, and Linux.
+- A maintained test framework and TypeScript-aware linting.
+- npm-compatible packaging and executable binary configuration.
+- GitHub Actions for continuous integration.
+
+Target a currently supported Node.js LTS release and document the minimum compatible version.
+
+Organize the code into independent modules for CLI commands, detection rules, redaction, configuration, reporting, input handling, and testing.
+
+The application must work without a network connection after installation.
+
+### 3. Required commands
+
+Implement at least the following command-line operations:
+
+**Scan input**
+
+`leakgoblin scan --stdin`
+
+Read input from standard input, identify potential secrets, and report finding type, line number, severity, and confidence. Mask detected values in all output.
+
+**Sanitize input**
+
+`leakgoblin sanitize --stdin`
+
+Read text from standard input and write a sanitized version to standard output. Preserve the surrounding text, line breaks, and useful debugging context.
+
+**Scan repository**
+
+`leakgoblin scan .`
+
+Recursively inspect supported text files while excluding `.git`, generated build directories, dependency directories, and other documented exclusions.
+
+**Machine-readable output**
+
+Support JSON reporting for CI pipelines and scripts.
+
+**Configuration**
+
+Support a local configuration file for additional detection patterns, excluded files, severity thresholds, and approved test fixtures.
+
+**Optional clipboard workflow**
+
+If clipboard integration is included, make it an explicit user-invoked operation. Clearly indicate whether clipboard content will be read or overwritten. Never run a background clipboard monitor.
+
+### 4. Detection and redaction engine
+
+Implement detection rules for common secret classes, including:
+
+- API keys and bearer tokens.
+- Password-like assignments and database credentials.
+- Private-key blocks.
+- Cloud credentials and recognizable provider tokens.
+- `.env` variables with sensitive names.
+- Authentication headers, signed tokens, and common connection-string formats.
+- User-defined patterns.
+
+Combine format-specific signatures with carefully tuned generic rules. Generic high-entropy detection may be offered as a heuristic, but it must not be presented as definitive proof of a secret.
+
+For every finding, distinguish between detection confidence and severity.
+
+Redaction must preserve the structure of the original input. For example, a sensitive assignment should retain its variable name while replacing its value with a marker.
+
+Include a reviewable mode that shows line numbers and masked snippets. The default behavior must not modify source files.
+
+Never write discovered secret values to application logs, crash reports, diagnostic output, telemetry, or test snapshots.
+
+If a file is too large, binary, unreadable, or unsupported, report the limitation instead of silently claiming it was checked.
+
+### 5. Trust and safety requirements
+
+The tool must:
+
+- Process source text locally by default.
+- Make no network requests during normal scans or sanitization.
+- Never upload scanned content.
+- Never overwrite files unless a separate, explicit opt-in operation is implemented.
+- Never automatically submit sanitized text to an AI provider.
+- Keep shell execution and input handling safe against command injection and malformed paths.
+- Avoid revealing complete secrets in terminal output, JSON reports, debugging information, or generated documentation.
+- Clearly explain that redaction is a best-effort filter and cannot guarantee complete protection.
+
+Add malicious-input tests, including long strings, invalid Unicode, multiline keys, terminal escape sequences, malformed configuration, and files containing sensitive-looking decoys.
+
+### 6. Developer experience and memorable terminal design
+
+Create a recognizable goblin-themed identity using concise messages, tasteful colors, optional ASCII art, and humorous success messages.
+
+Examples of the desired tone:
+
+- "The goblin found a suspicious token."
+- "Your prompt has been sanitized."
+- "No matching secrets detected. Stay vigilant."
+
+Do not let jokes obscure severe findings or turn a warning into a vague message.
+
+Provide quiet and no-color modes for automation, predictable exit codes, and a helpful `--help` output.
+
+Examples:
+
+`leakgoblin scan .`
+
+`cat prompt.txt | leakgoblin sanitize --stdin`
+
+`leakgoblin scan . --format json`
+
+`leakgoblin --help`
+
+Make command names, options, standard input, standard output, and error output consistent with normal CLI conventions.
+
+### 7. Testing and acceptance criteria
+
+Create automated tests for detection, redaction, configuration, exclusions, exit codes, and machine-readable output.
+
+Use synthetic canary secrets only. Never use genuine credentials in the repository.
+
+Acceptance criteria:
+
+1. A clean installation works using the documented steps.
+2. All documented commands execute successfully.
+3. Sanitization preserves surrounding text and redacts the expected values.
+4. Scan output never exposes complete detected secret values.
+5. Scans and sanitization produce no unexpected network requests.
+6. The tool does not alter source files during a normal scan.
+7. Windows, macOS, and Linux compatibility is tested where feasible.
+8. The production package includes the executable entry point and required runtime assets.
+9. A packaging smoke test verifies that the published-style package works without relying on development-only files.
+10. All tests and the production build pass in the final environment.
+
+### 8. Open-source release and funding
+
+Provide a permissively licensed, contribution-friendly repository.
+
+Include:
+
+- Installation and command examples near the top of the README.
+- A short terminal demo suitable for a GIF.
+- A `SECURITY.md` explaining limitations and responsible vulnerability reporting.
+- A sponsor configuration example that the maintainer can activate with real account details.
+- A `SPONSORS.md` describing how contributions support maintenance, test coverage, and new detection rules.
+- A launch announcement for developer communities that does not claim perfect secret detection.
+
+A proposed donation message is:
+
+"Saved you from a suspicious copy-paste? Toss the goblin a coffee to help maintain the tool."
+
+Show the message after an optional completion summary, never before the user can access the result. Make it disableable. The tool must remain fully functional without donations.
+
+### 9. Final deliverables
+
+Deliver the complete working source code, lockfile, tests, CI configuration, documentation, license, security policy, sample configuration, packaging instructions, and release checklist.
+
+End by reporting what was implemented, commands actually tested, known limitations, and exact steps to publish the first release.
+
+Do not stop at an implementation plan.
+
+---
+
+# PROMPT 2 — AidSignal
+
+## Build a transparent, self-hostable emergency and mutual-aid tracking platform
+
+### Role
+
+Act as a senior full-stack engineer, accessibility specialist, privacy engineer, community-response product designer, and open-source maintainer.
+
+Build **AidSignal**, a configurable web application for local emergency relief groups, community fridges, supply distribution programs, temporary shelter networks, and other mutual-aid initiatives.
+
+It should help communities communicate verified needs, record incoming support, document fulfillment, and make public information easier to audit.
+
+The initial version is a reusable open-source platform, not an automatically authoritative source of emergency information.
+
+### 1. Product objectives
+
+A community organizer should be able to deploy the platform, configure an organization, publish urgent needs, update supply status, and direct supporters to legitimate donation destinations.
+
+Visitors should be able to understand:
+
+- What is needed.
+- Where and when the information applies.
+- Who maintains or verifies the information.
+- What has been received or fulfilled.
+- How support can be delivered.
+- When a listing was last confirmed.
+
+Use fictional data for the initial demo. Real deployments must be independently configured and verified by the organizations using the software.
+
+### 2. Technology and architecture
+
+Build a responsive full-stack application using:
+
+- Next.js with TypeScript.
+- Tailwind CSS and an accessible component system.
+- Supabase Auth and PostgreSQL for identity and persistent records.
+- Supabase Realtime for appropriate dashboard updates.
+- Server-side endpoints for privileged operations.
+- A maintained test framework and automated browser testing.
+
+Verify current framework documentation and supported versions before implementation.
+
+Provide Docker-based deployment instructions and a practical hosted-deployment option.
+
+A developer should be able to explore the interface using demo data before configuring a live database.
+
+### 3. Required MVP features
+
+**Public needs dashboard**
+
+Display a searchable, filterable list of active needs. Each listing should include a title, category, description, requested quantity, available quantity if known, urgency, broad location, status, source, verification status, and last-updated timestamp.
+
+Support categories such as food, water, hygiene, clothing, medicine-related supplies, shelter resources, and transportation.
+
+Do not present a list of categories as a substitute for locally validated emergency guidance.
+
+**Organization dashboard**
+
+Authorized staff must be able to create, edit, archive, and update needs, supplies, contributions, and fulfillment records.
+
+Include sensible statuses such as requested, partially fulfilled, fulfilled, expired, and archived.
+
+**Community supply inventory**
+
+Track requests, stock updates, units, and fulfillment events. Make the difference between a requested quantity and a confirmed quantity explicit.
+
+**Contribution and fulfillment ledger**
+
+Record reported contributions, reconciled contributions, and fulfillment events with timestamps and references.
+
+Support manual reconciliation when money or goods were handled outside the application. Clearly distinguish a claim, a pending review, and a verified record.
+
+**Donation destinations**
+
+Allow an organization to configure links to its official donation page or chosen external payment destination.
+
+The MVP must not hold funds, silently redirect donations to the project maintainer, or imply that external donations have been independently verified.
+
+Payment processors may charge their own fees. Do not advertise a universal zero-fee guarantee.
+
+**Verification and expiration**
+
+Display verification status and last-verified time on public records. Provide an expired or stale-data indicator based on configurable rules.
+
+**Activity history**
+
+Maintain an auditable history of administrative changes. Restrict history access when an entry contains information that should not be public.
+
+**Data portability**
+
+Support CSV export for authorized administrators and safe, documented import of structured sample data.
+
+### 4. Security, privacy, and access control
+
+Implement role-based access control for organization owners, administrators, editors, and public visitors.
+
+Public visitors should only see records intentionally published for public viewing.
+
+Enforce authorization at the server and database levels. Never rely solely on hiding buttons in the interface.
+
+Define and test appropriate PostgreSQL row-level security policies.
+
+Never expose a Supabase service-role key or other privileged credential to a browser.
+
+Prevent ordinary users from granting themselves administrative roles. Provide a secure, documented initial-admin setup process.
+
+Do not publicly expose private donor details, personal phone numbers, sensitive household information, or exact locations of vulnerable people.
+
+Prefer broad area descriptions rather than exact residential addresses.
+
+If public submissions are supported, validate them server-side and implement sensible abuse controls and a moderation queue.
+
+Use secure session management, input validation, rate limiting where appropriate, and safe error reporting.
+
+### 5. Transparency without misleading accounting
+
+The application must make clear that it records information supplied by participating organizations.
+
+Do not label an external payment as verified merely because someone submitted a form.
+
+Do not claim that the ledger captures every dollar, that money is cryptographically secured, or that a campaign is independently audited unless a real implementation and verification process support those claims.
+
+For the MVP, prioritize a traceable, append-oriented event history, explicit verification states, timestamps, source references, and exportable records.
+
+Document how independent organizations can reconcile their external financial records with their AidSignal records.
+
+### 6. User interface and accessibility
+
+Design a clean, calm interface suitable for mobile devices, low-bandwidth connections, and users unfamiliar with technical dashboards.
+
+Prioritize readable typography, strong contrast, semantic HTML, keyboard navigation, accessible forms, and screen-reader-friendly status messages.
+
+Provide loading skeletons, empty states, error messages, confirmation dialogs, and clear indicators when information is stale.
+
+Avoid unnecessary animation, distracting graphics, and large map dependencies. Make location-aware features optional.
+
+All essential functionality must remain available without paid visual components.
+
+### 7. Database, tests, and validation
+
+Create documented schemas and migrations for organizations, users or memberships, needs, supply items, contribution records, fulfillment events, and audit history.
+
+Use server-side validation and database constraints to protect record integrity.
+
+Provide synthetic seed data that demonstrates the full workflow.
+
+Tests must cover:
+
+- Authentication and role restrictions.
+- Database row-level security.
+- Public versus private records.
+- Need creation and status changes.
+- Contribution reconciliation.
+- Audit-history integrity.
+- Stale-record handling.
+- Input validation and abusive submissions.
+- Responsive layouts and basic accessibility.
+- Production build and deployment configuration.
+
+Do not use live crisis records or personal data in fixtures.
+
+### 8. Documentation and deployment
+
+Include a complete README, environment-variable reference, schema documentation, migration instructions, Docker setup, backup and recovery guidance, and a secure first-admin setup guide.
+
+Include a `.env.example` with descriptive placeholders only.
+
+Document what the platform does not verify automatically and the responsibilities of the organization operating a deployment.
+
+Create a demo mode that is clearly labeled and cannot accidentally publish example information as real emergency information.
+
+### 9. Funding and open-source community
+
+Keep the public dashboard usable without a donation.
+
+Provide a maintainer-facing support page explaining how donations help fund maintenance, accessibility work, documentation, and reliability improvements.
+
+Include a sponsorship configuration example and instructions for connecting legitimate funding accounts.
+
+Do not conflate donations to the software maintainer with donations to an emergency-relief organization. They must be separate and clearly identified.
+
+Prepare a truthful launch announcement and an operator checklist for deploying the system with an actual community partner.
+
+### 10. Acceptance criteria
+
+The application is ready for its initial release only when:
+
+1. A new developer can follow the documented setup without undocumented manual fixes.
+2. Demo data loads and the full sample workflow works.
+3. Authorized staff can publish and update a need.
+4. Public visitors cannot access private administrative data.
+5. Contribution states and verification labels are accurate.
+6. The application never claims to process a payment when it only stores a link or record.
+7. Critical database permissions have automated tests.
+8. The production build completes successfully.
+9. Backup, configuration, and deployment limitations are documented.
+10. The repository includes the required license, security guidance, CI workflow, tests, and release checklist.
+
+Deliver the complete working repository, not just a dashboard mockup.
+
+---
+
+# PROMPT 3 — LaunchShield
+
+## Build a zero-configuration security and launch-readiness auditor for indie developers
+
+### Role
+
+Act as a senior application security engineer, software-supply-chain specialist, TypeScript CLI developer, and privacy-conscious product architect.
+
+Build **LaunchShield**, an open-source command-line utility that helps indie hackers, freelancers, small SaaS teams, and open-source maintainers identify common launch-readiness risks before publishing a repository or releasing a product.
+
+It must provide practical findings, explain remediation steps, and generate professional reports. It must not pretend to replace a lawyer, a penetration test, or a comprehensive compliance assessment.
+
+### 1. Main objective
+
+A developer should be able to run one command against a repository and obtain an actionable report containing:
+
+- Potentially exposed secrets.
+- Risky environment and configuration files.
+- Dependency inventory and available vulnerability findings.
+- License metadata and entries requiring review.
+- Missing or weak repository-security practices.
+- A structured privacy-policy draft based on an explicit questionnaire.
+
+The initial version must be useful without a mandatory account or hosted service.
+
+### 2. Technology choices
+
+Use:
+
+- Node.js with TypeScript and ESM.
+- A lightweight CLI framework.
+- Maintained libraries for structured reports and configuration validation.
+- A test framework suitable for filesystem and CLI testing.
+- GitHub Actions for continuous integration.
+- Native operating-system facilities where appropriate.
+
+Review established tools and official documentation before implementing scanning engines. Consider integrations with mature secret-detection utilities, OSV-Scanner, and available package-manager audit mechanisms rather than reimplementing every scanner.
+
+Verify current compatibility and maintenance status before choosing dependencies.
+
+### 3. Required commands
+
+Implement a clear CLI such as:
+
+`launchshield scan .`
+
+Runs supported local checks and prints a human-readable summary.
+
+`launchshield scan . --format json`
+
+Generates machine-readable findings.
+
+`launchshield scan . --format html`
+
+Produces a standalone HTML report.
+
+`launchshield licenses .`
+
+Generates a dependency license inventory.
+
+`launchshield policy init`
+
+Launches a questionnaire for creating a customizable privacy-policy draft.
+
+`launchshield doctor`
+
+Checks the local environment and reports missing optional scanners or unsupported project formats.
+
+Add a CI-friendly failure threshold, predictable exit codes, and a quiet mode.
+
+Support a list of ignored paths with an explanation for each exclusion. Do not suppress findings silently.
+
+### 4. Secret and configuration scanning
+
+Detect common secret patterns, sensitive assignments, private-key material, risky configuration files, and tracked `.env` files that should not normally be public.
+
+Use format-specific detection and optional heuristics. Report confidence and severity separately.
+
+Findings may include the file, line number, category, and recommended action. Never include complete secret values in terminal output or generated reports.
+
+Support a safe allowlist mechanism for known test fixtures and false positives. Make exceptions explicit and reviewable.
+
+Never upload source files or scan results to a remote service during a normal local scan.
+
+Protect against huge files, binary files, symlink cycles, path traversal, malformed text, and terminal-output injection.
+
+### 5. Dependency inventory and vulnerability checks
+
+Detect supported lockfiles and manifest formats.
+
+For the first release, prioritize accurate support for the ecosystems the implementation can genuinely test. Clearly identify unsupported ecosystems.
+
+Generate dependency inventories where package metadata is available.
+
+Provide vulnerability checks through supported, established mechanisms. When an online vulnerability database, package registry, or scanner service is required, explain the network access before running that operation or expose an explicit online-scan option.
+
+Do not represent an offline package inventory as a current vulnerability assessment.
+
+Report package name, version, advisory reference when available, severity as provided by the source, and a recommended next step.
+
+Do not automatically update dependencies, execute installation scripts, or modify application files during an ordinary audit.
+
+Document the limitations of severity estimates and vulnerability-database coverage.
+
+### 6. License analysis
+
+Build a dependency-license inventory from supported manifests, lockfiles, and package metadata.
+
+Identify unknown, missing, conflicting, or unusual license metadata.
+
+Where accurate license identifiers are available, preserve them and record the source.
+
+Never categorically label a dependency as illegal or claim that the complete project is legally compliant merely because its dependencies contain recognizable license names.
+
+Treat license compatibility as a review requirement rather than a definitive legal verdict.
+
+Give maintainers actionable suggestions, including which package metadata to inspect and where to find the original license.
+
+### 7. Privacy-policy draft generator
+
+Provide an interactive questionnaire covering topics such as:
+
+- Organization and contact information.
+- Types of personal data collected.
+- Purpose of processing.
+- Analytics and cookies.
+- Authentication and user accounts.
+- External service providers.
+- Data retention and deletion.
+- User requests and support channels.
+- Geographic scope and the jurisdictions the operator believes apply.
+
+Generate a formatted, editable policy draft based on answers the user explicitly supplies.
+
+Do not infer real data practices from source code and present them as facts. Clearly mark incomplete answers and unresolved questions.
+
+Include visible language explaining that the generated document is a starting point, not legal advice or proof of compliance. Recommend qualified legal review where appropriate.
+
+Keep questionnaire responses and generated policies local unless the user explicitly configures another destination.
+
+### 8. Reporting and integration
+
+Provide consistent internal finding objects so every scanner can output through the same reporting layer.
+
+Support:
+
+- Terminal summaries.
+- JSON.
+- Standalone HTML.
+- SARIF where findings can be mapped correctly to its schema.
+- Optional baseline comparison to distinguish new findings from previously reviewed ones.
+
+Reports should prioritize high-impact findings and include remediation guidance, evidence locations, confidence, and scanner limitations.
+
+Use stable finding identifiers where possible so CI systems can compare results across runs.
+
+Ensure reports do not leak the very secrets the tool was created to detect.
+
+### 9. Security and execution rules
+
+Run filesystem scanning with least privilege.
+
+Avoid shell interpolation. If subprocesses are required for established scanners, pass arguments safely and validate the executable, arguments, timeout, and exit status.
+
+Never run project-defined scripts or install dependencies automatically as part of a normal audit.
+
+Treat repository files as untrusted input.
+
+Make online operations transparent, disable unnecessary telemetry, and document exactly what data leaves the machine during any optional integration.
+
+Do not modify files without explicit user authorization.
+
+### 10. Automated testing
+
+Use repositories of synthetic fixtures to test:
+
+- Recognizable and generic secret detection.
+- Redaction in every report format.
+- False positives and allowlists.
+- Supported manifest and lockfile parsing.
+- Missing and unknown license metadata.
+- Privacy questionnaire validation and draft generation.
+- Offline and online error handling.
+- Malformed input and filesystem edge cases.
+- CLI exit codes and CI threshold behavior.
+- Stable JSON and SARIF output.
+- Production packaging and installation.
+
+Do not use genuine secrets or confidential projects as test fixtures.
+
+### 11. Repository and release deliverables
+
+Provide complete source code, documentation, tests, CI, dependency lockfile, sample configuration, and packaging scripts.
+
+The README should contain a quick-start section that enables a developer to run their first scan within minutes.
+
+Include a sample report that uses a fictional project and synthetic findings.
+
+Include `SECURITY.md`, `CONTRIBUTING.md`, issue templates, a release checklist, and a support-for-development section.
+
+Provide a sponsor-link template with clearly explained setup steps. Do not invent sponsor usernames or present inactive funding placeholders as working links.
+
+Create launch materials that demonstrate concrete functionality without claiming exhaustive security coverage.
+
+### 12. Acceptance criteria
+
+The project passes its initial release gate when:
+
+1. A clean installation and first scan succeed using documented commands.
+2. Local scanning works without an account or mandatory network access.
+3. All supported scan categories report their scope and limitations.
+4. No full secret values appear in logs, reports, or snapshots.
+5. Privacy-policy drafts are based on explicit answers and are clearly qualified.
+6. The project never presents its report as a legal certification.
+7. License results distinguish missing metadata from verified license information.
+8. Online vulnerability checks correctly distinguish service errors from clean results.
+9. The test suite and production build pass.
+10. The repository is ready for public contribution and release.
+
+Deliver a working CLI with real scanning and reporting functionality, not a list of recommendations or a static report generator.
+
+---
+
+# PROMPT 4 — MemeForge AI
+
+## Build a self-hostable, open-source AI video-to-meme and caption studio
+
+### Role
+
+Act as a senior AI application engineer, full-stack developer, media-processing specialist, and privacy-focused open-source maintainer.
+
+Build **MemeForge AI**, a self-hostable web application that transforms user-provided short videos or audio clips into transcripts, meme-caption suggestions, subtitle files, and shareable text outputs using configurable AI model providers.
+
+The product should feel fun and fast, but its processing pipeline must be robust, transparent, and safe to operate.
+
+Do not tie the entire application to a single model or a short-lived social-media trend.
+
+### 1. Product objective
+
+A user should be able to select a media file, process its audio, review a transcript, generate several caption ideas, edit the results, and export the content.
+
+The initial release should focus on one complete workflow that works reliably rather than promising a professional video editor with features that do not exist.
+
+### 2. Technology and architecture
+
+Use:
+
+- React with TypeScript and Vite for the frontend.
+- A Python FastAPI backend.
+- FFmpeg for audio extraction and supported media conversions.
+- A pluggable transcription adapter.
+- A pluggable language-model adapter.
+- SQLite or another appropriately lightweight local metadata store for job tracking.
+- Docker Compose for repeatable self-hosted deployment.
+- Automated backend, frontend, and integration tests.
+
+Choose actively maintained dependencies and verify current official APIs before implementing integrations.
+
+Define clean interfaces for transcription, caption generation, media storage, and job processing.
+
+### 3. Core media workflow
+
+Implement the following complete path:
+
+1. The user uploads a supported video or audio file.
+2. The backend validates size, duration, type, and file contents.
+3. The server creates a processing job.
+4. FFmpeg extracts audio where necessary.
+5. A configured transcription provider generates a transcript, or the user supplies an existing transcript.
+6. The caption generator produces a set of creative outputs.
+7. The user reviews and edits the transcript and captions.
+8. The application exports the selected outputs.
+9. Temporary files are cleaned up according to the configured retention policy.
+
+Display progress and meaningful errors throughout the workflow.
+
+Do not show a completed status until the requested processing and required exports have actually succeeded.
+
+### 4. AI provider support
+
+Implement a provider abstraction so users can configure a compatible local or remote model service.
+
+Support a documented OpenAI-compatible API endpoint for caption generation, including local model servers where supported by their compatibility layer.
+
+For transcription, provide a working adapter for a selected, maintained speech-to-text implementation. A local transcription profile can use an appropriate open-weight model if its dependencies and model license are suitable.
+
+Separate text generation from speech transcription; a text model endpoint must not automatically be treated as a working audio-transcription endpoint.
+
+Provide a mock provider for tests and a clearly labeled demo mode so that the interface can be explored without API keys or downloaded model weights.
+
+The application must never pretend that the mock provider generated a genuine AI result.
+
+Provide configuration for the model endpoint, selected model, optional API credential, processing timeouts, file limits, and local-versus-remote processing.
+
+Keep provider credentials exclusively on the backend. Never embed them in frontend source code, browser storage, generated exports, or logs.
+
+### 5. Caption-generation features
+
+Generate multiple editable output styles, including:
+
+- Short meme captions.
+- Relatable developer humor.
+- Reaction-style captions.
+- Short-form social captions.
+- Alternative punchlines.
+- Video subtitle text.
+
+Allow users to choose tone, language, target platform, caption length, and number of suggestions.
+
+Treat media transcripts and their embedded text as untrusted user content, not instructions to override application prompts or reveal system information.
+
+The model must not be permitted to execute commands or directly access files through the caption-generation interface.
+
+Keep outputs editable. Provide honest explanations when the model is unavailable or returns incomplete results.
+
+### 6. Export capabilities
+
+Support:
+
+- Plain-text captions.
+- Transcript downloads.
+- SRT subtitle files.
+- WebVTT subtitle files.
+- Downloadable bundles containing the selected text outputs.
+
+Validate timestamps and subtitle structure.
+
+If thumbnail or rendered-video generation is included, treat it as an additional feature. Do not delay a reliable caption-and-subtitle MVP to build an incomplete video editor.
+
+### 7. Interface and user experience
+
+Build a modern, responsive studio interface with:
+
+- An upload area and sample-project selector.
+- File information and validation results.
+- A processing-job view.
+- A transcript editor.
+- A caption-generation control panel.
+- Editable results with copy and download actions.
+- Provider-configuration status.
+- Clear privacy and processing indicators.
+
+Use accessible forms, keyboard-operable controls, readable typography, and helpful error states.
+
+Make the product usable on desktop and mobile browsers.
+
+Keep the visual style distinctive and playful without sacrificing usability.
+
+### 8. Media and server security
+
+Treat uploaded media as untrusted input.
+
+Enforce configurable limits on file size, clip duration, concurrent jobs, and processing time.
+
+Validate actual content rather than relying only on filenames or browser-provided MIME types.
+
+Use randomly generated storage names, restrict file access, prevent path traversal, avoid unsafe shell interpolation, and apply timeouts to FFmpeg and other subprocesses.
+
+Run media-processing components with minimal privileges in deployment.
+
+Store temporary uploads outside public static directories. Implement automatic cleanup and never publish raw uploaded media to a public URL by default.
+
+Document that this is a single-user or trusted-instance deployment unless appropriate authentication and multi-user protections are explicitly implemented.
+
+Do not enable unrestricted public uploads in a publicly accessible demo by default.
+
+If remote inference is configured, clearly tell users which content may be transmitted to the remote provider. Keep media processing local where possible and never silently send recordings to an external service.
+
+Check the license and terms of any included model weights, packages, and media-processing dependencies.
+
+### 9. Deployment and configuration
+
+Provide:
+
+- A Dockerfile for the backend.
+- A Dockerfile for the frontend or an appropriate production-serving configuration.
+- A Docker Compose file.
+- Persistent storage for required job metadata.
+- Documented FFmpeg installation or container setup.
+- An `.env.example` with placeholder values.
+- A health endpoint and useful diagnostic information.
+- A local-demo configuration requiring no real credentials.
+- A separate, clearly documented configuration for connecting a model server.
+
+Do not make a huge model download a hidden prerequisite of the first application startup.
+
+Do not automatically download enormous model files without displaying or documenting the action. Explain CPU, memory, storage, and optional GPU considerations.
+
+The core UI and mock workflow must remain testable without GPU hardware.
+
+### 10. Cost and abuse controls
+
+The self-hosted version should allow users to bring their own compatible model endpoint.
+
+For deployments offering a public demo or hosted service, document and implement configurable file limits, request limits, timeouts, and cost controls.
+
+Do not hard-code privileged provider credentials into the frontend or repository.
+
+Do not advertise unlimited cloud inference unless actual service capacity and pricing support that claim.
+
+Include a public-demo configuration that can use curated sample media and disable uploads until the operator deliberately enables and secures them.
+
+### 11. Tests and acceptance criteria
+
+Test:
+
+- File validation and rejected media.
+- Job creation, status transitions, and errors.
+- FFmpeg process failures and timeouts.
+- Mock transcription and caption providers.
+- Configured provider failures.
+- Credential handling and log redaction.
+- Transcript and subtitle exports.
+- Malformed timestamps.
+- Temporary-file cleanup.
+- Unsafe filename and path-traversal attempts.
+- File-size and processing limits.
+- Production builds and Docker startup.
+
+Provide a demo test that completes the full workflow without requiring a real model provider.
+
+Include an integration test for a real provider where practical, but do not make routine CI dependent on paid API access or external model availability.
+
+### 12. Open-source launch and sponsorship
+
+Create a short demonstration using fictional or appropriately licensed sample media.
+
+The README should show how to run the demo, configure a local model provider, configure a remote-compatible endpoint, process a clip, and download subtitles.
+
+Include troubleshooting for missing FFmpeg, unavailable inference servers, invalid model configuration, low memory, and long-running jobs.
+
+Provide `SECURITY.md`, `CONTRIBUTING.md`, license information, CI, tests, and a release checklist.
+
+Add a support-for-development page explaining that contributions support provider integrations, documentation, bug fixes, and media-processing improvements.
+
+Include a sponsor-configuration example without inventing active sponsorship links.
+
+The application must not require a donation or cloud subscription to use the self-hosted core.
+
+### 13. Final delivery requirements
+
+Deliver a functioning application with complete source code, provider interfaces, working media-processing integration, tests, Docker deployment, configuration documentation, and a release-ready repository.
+
+Before completion, start the application using the documented method, run a representative end-to-end workflow, inspect failures, and fix them.
+
+Clearly distinguish implemented features from future ideas and report known model, hardware, and processing limitations.
+
+Do not substitute a static UI, fake processing animation, or mock AI output for the real media pipeline.
+
+---
+
+# Shared 14-Day Open-Source Launch and Funding Workflow
+
+Apply this workflow to whichever project is selected for the initial release.
+
+## Days 1–3: Build and validate the MVP
+
+**Day 1 — Scope and foundations**
+
+Initialize the repository, establish the architecture, document the core user journey, and implement the essential feature path.
+
+Keep the demo functioning from the beginning.
+
+**Day 2 — Complete the main workflow**
+
+Implement the primary feature, error handling, configuration, and the first set of automated tests. Remove nonfunctional controls and placeholder integrations from the user-facing product.
+
+**Day 3 — Test and polish**
+
+Run the full test suite and production build. Fix installation problems, improve the README, add screenshots or a short demo, and test the documented quick-start procedure in a clean environment.
+
+Do not announce that the project is production-ready solely because the interface looks finished.
+
+## Days 4–7: Publish and distribute
+
+**Day 4 — Public repository**
+
+Publish the repository with a real license, setup instructions, security guidance, contribution instructions, and a clear problem statement.
+
+Configure sponsorship links only after the maintainer has supplied actual account details.
+
+**Day 5 — Demonstration content**
+
+Prepare a short recording or GIF showing the software solving its intended problem. Explain the difference between what is implemented and what is planned.
+
+**Day 6 — Audience-specific launch**
+
+Choose the most relevant communities rather than posting everywhere indiscriminately.
+
+For LeakGoblin and LaunchShield, prioritize developer communities, security-minded developers, and people building independent software.
+
+For AidSignal, prioritize community organizers and organizations that can validate the software against real operating needs.
+
+For MemeForge AI, prioritize self-hosting, AI tooling, media creation, and open-source communities.
+
+Follow each community's posting and promotion rules.
+
+**Day 7 — Collect real feedback**
+
+Invite users to report bugs, request integrations, and share reproducible examples.
+
+Fix the most common installation and usability issues before adding major features.
+
+## Days 8–14: Improve, engage, and earn trust
+
+**Days 8–10 — Improve the product**
+
+Address confirmed bugs, prioritize recurring user requests, and add tests for discovered failures.
+
+Keep a public record of meaningful improvements.
+
+**Days 11–12 — Strengthen credibility**
+
+Improve onboarding, clarify limitations, review security findings, and publish a short changelog.
+
+Invite genuine contributions. Do not manufacture activity, testimonials, stars, or sponsor numbers.
+
+**Days 13–14 — Review and communicate**
+
+Publish a release update describing what changed, what remains incomplete, and the next priorities.
+
+Thank genuine contributors and sponsors, with permission where appropriate. Explain how contributions and funding support future development.
+
+Measure adoption through useful signals such as successful installations, reproducible issues, returning contributors, and user feedback—not just views or stars.
+
+# Shared funding and repository checklist
+
+Before announcing a project, confirm that the following items exist:
+
+- [ ] A working public repository and appropriate license.
+- [ ] A tested installation and quick-start guide.
+- [ ] A concise demonstration of the real product.
+- [ ] A clear explanation of who benefits and which problem it solves.
+- [ ] Automated tests and continuous integration.
+- [ ] A security policy and a way to report bugs.
+- [ ] A contribution guide and an initial set of well-defined issues.
+- [ ] A support-for-development section.
+- [ ] Real, verified sponsorship destinations configured by the maintainer.
+- [ ] Honest disclosures about limitations, external services, and data handling.
+- [ ] A realistic list of the next development priorities.
+
+GitHub funding can be configured using `.github/FUNDING.yml` when genuine provider usernames or links are available. Until then, keep a clearly labeled example rather than advertising a broken sponsor destination.
+
+# Final instruction to the coding agent
+
+Choose one of the four product prompts and complete it as a cohesive, testable, documented open-source release.
+
+Do not attempt to build all four products simultaneously under the same two-week deadline.
+
+Prioritize a functioning end-to-end user journey, secure defaults, a reliable clean-install experience, and a clear value proposition.
+
+Finish with a concise delivery report listing implemented functionality, commands actually tested, test results, deployment instructions, known limitations, and remaining release tasks.
+
+Never fabricate test results, security guarantees, funding links, user adoption, or donation outcomes. The goal is to release useful software that earns trust through demonstrated value and transparent maintenance.

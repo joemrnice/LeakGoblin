@@ -1,0 +1,15 @@
+You are helping me debug this Node.js app:
+
+```js
+const config = {
+  port: 3000,
+  host: "localhost",
+  debug: true
+};
+
+async function start() {
+  console.log(`Server starting on ${config.host}:${config.port}`);
+}
+```
+
+The server crashes on startup with EADDRINUSE. How can I fix it?

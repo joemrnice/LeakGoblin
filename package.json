@@ -1,0 +1,53 @@
+{
+  "name": "leakgoblin",
+  "version": "0.1.0",
+  "description": "Scan locally. Redact sensitive values. Review before sharing. A funny, genuinely useful open-source AI-prompt security CLI.",
+  "type": "module",
+  "bin": {
+    "leakgoblin": "./dist/cli.js"
+  },
+  "main": "./dist/cli.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "lint": "tsc --noEmit",
+    "prepare": "npm run build",
+    "smoke": "node ./scripts/smoke.mjs",
+    "start": "node ./dist/cli.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "security",
+    "secrets",
+    "cli",
+    "ai",
+    "prompt",
+    "redaction",
+    "devtools",
+    "open-source"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lovixcloud/leakgoblin.cli"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
+  }
+}
