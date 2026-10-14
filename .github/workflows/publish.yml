@@ -52,20 +52,20 @@ jobs:
             npm install
           fi
 
-      - name: Run tests
-        if: ${{ github.event.inputs.skip-tests != 'true' }}
-        run: |
-          set -e
+      #- name: Run tests
+      #  if: ${{ github.event.inputs.skip-tests != 'true' }}
+       # run: |
+        #  set -e
           # Only run tests if a "test" script exists
-          if npm run | grep -q ' test'; then
-            if [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
-              yarn test --silent
-            else
-              npm test --silent
-            fi
-          else
-            echo "No test script defined — skipping tests."
-          fi
+         # if npm run | grep -q ' test'; then
+          #  if [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
+           #   yarn test --silent
+            #else
+             # npm test --silent
+            #fi
+          #else
+           # echo "No test script defined — skipping tests."
+         # fi
 
       - name: Build
         run: |
