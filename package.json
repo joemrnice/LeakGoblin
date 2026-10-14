@@ -36,7 +36,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lovixcloud/leakgoblin.cli"
+    "url": "https://github.com/lovixcloud/leakgoblin.git"
   },
   "engines": {
     "node": ">=20.0.0"
