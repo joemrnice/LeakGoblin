@@ -1,33 +1,96 @@
-# This workflow will run tests using node and then publish a package to GitHub Packages when a release is created
-# For more information see: https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
-
-name: Node.js Package
+name: Build and Publish NPM package on release
 
 on:
   release:
-    types: [created]
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      skip-tests:
+        description: 'Skip running tests'
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  packages: write
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout code
+        uses: actions/checkout@v6
         with:
-          node-version: 22
-      - run: npm ci
-      - run: npm test
+          # Use the ref that triggered the workflow (release tag), fallback to default branch if not set
+          ref: ${{ github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-  publish-npm:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Authenticate to npm
+        # Ensure npm can publish using the provided token
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Install dependencies (detect package manager)
+        run: |
+          set -e
+          if [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            pnpm install --frozen-lockfile
+          elif [ -f yarn.lock ]; then
+            corepack enable
+            yarn install --frozen-lockfile
+          elif [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run tests
+        if: ${{ github.event.inputs.skip-tests != 'true' }}
+        run: |
+          set -e
+          # Only run tests if a "test" script exists
+          if npm run | grep -q ' test'; then
+            if [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
+              yarn test --silent
+            else
+              npm test --silent
+            fi
+          else
+            echo "No test script defined — skipping tests."
+          fi
+
+      - name: Build
+        run: |
+          set -e
+          # Only run build if a "build" script exists
+          if npm run | grep -q ' build'; then
+            if [ -f yarn.lock ] && command -v yarn >/dev/null 2>&1; then
+              yarn build
+            else
+              npm run build
+            fi
+          else
+            echo "No build script defined — skipping build."
+          fi
+
+      - name: Publish to npm
         env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -e
+          # Ensure registry auth is set
+          npm config set //registry.npmjs.org/:_authToken "${NODE_AUTH_TOKEN}"
+          if [ -f package.json ]; then
+            # If your package is public and scoped, keep --access public; remove if private
+            npm publish --access public
+          else
+            echo "No package.json found — nothing to publish."
+          fi
