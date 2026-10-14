@@ -1,0 +1,27 @@
+name: Build and Publish NPM package on release
+
+on:
+  release:
+    types: [ published ]  # Triggers when you publish a release through GitHub UI
+  workflow_dispatch:      # Enables manual trigger via GitHub web
+
+permissions:
+  contents: write  # To push updated files back to main
+  packages: write  # For GitHub packages (optional)
+  id-token: write  # Required for OIDC trusted publishing
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: main  # Always checkout main branch, not the tag
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Publish NPM Package
+        uses: phucbm/publish-npm-action@v1  # Docs https://github.com/phucbm/publish-npm-action
+        with:
+          skip-tests: ${{ github.event.inputs.skip-tests || 'false' }}
